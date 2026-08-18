@@ -1,0 +1,195 @@
+import math
+
+# Board positions:
+# 0 | 1 | 2
+# ---------
+# 3 | 4 | 5
+# ---------
+# 6 | 7 | 8
+
+board = [" "] * 9
+
+HUMAN = "X"
+AI = "O"
+
+
+def print_board():
+    print()
+    print(f" {board[0]} | {board[1]} | {board[2]} ")
+    print("---+---+---")
+    print(f" {board[3]} | {board[4]} | {board[5]} ")
+    print("---+---+---")
+    print(f" {board[6]} | {board[7]} | {board[8]} ")
+    print()
+
+
+def check_winner(board):
+    winning_combinations = [
+        (0, 1, 2),
+        (3, 4, 5),
+        (6, 7, 8),
+        (0, 3, 6),
+        (1, 4, 7),
+        (2, 5, 8),
+        (0, 4, 8),
+        (2, 4, 6)
+    ]
+
+    for a, b, c in winning_combinations:
+        if board[a] != " " and board[a] == board[b] == board[c]:
+            return board[a]
+
+    if " " not in board:
+        return "Tie"
+
+    return None
+
+
+def minimax(board, depth, is_maximizing, alpha, beta):
+    result = check_winner(board)
+
+    # Terminal states
+    if result == AI:
+        return 10 - depth
+
+    if result == HUMAN:
+        return depth - 10
+
+    if result == "Tie":
+        return 0
+
+    if is_maximizing:
+        best_score = -math.inf
+
+        for i in range(9):
+            if board[i] == " ":
+                board[i] = AI
+
+                score = minimax(
+                    board,
+                    depth + 1,
+                    False,
+                    alpha,
+                    beta
+                )
+
+                board[i] = " "
+                best_score = max(best_score, score)
+
+                # Alpha-Beta pruning
+                alpha = max(alpha, best_score)
+
+                if beta <= alpha:
+                    break
+
+        return best_score
+
+    else:
+        best_score = math.inf
+
+        for i in range(9):
+            if board[i] == " ":
+                board[i] = HUMAN
+
+                score = minimax(
+                    board,
+                    depth + 1,
+                    True,
+                    alpha,
+                    beta
+                )
+
+                board[i] = " "
+                best_score = min(best_score, score)
+
+                # Alpha-Beta pruning
+                beta = min(beta, best_score)
+
+                if beta <= alpha:
+                    break
+
+        return best_score
+
+
+def find_best_move():
+    best_score = -math.inf
+    best_move = None
+
+    for i in range(9):
+        if board[i] == " ":
+            board[i] = AI
+
+            score = minimax(
+                board,
+                0,
+                False,
+                -math.inf,
+                math.inf
+            )
+
+            board[i] = " "
+
+            if score > best_score:
+                best_score = score
+                best_move = i
+
+    return best_move
+
+
+def human_move():
+    while True:
+        try:
+            move = int(input("Enter your move (1-9): ")) - 1
+
+            if move < 0 or move > 8:
+                print("Please enter a number from 1 to 9.")
+            elif board[move] != " ":
+                print("That position is already occupied.")
+            else:
+                board[move] = HUMAN
+                break
+
+        except ValueError:
+            print("Please enter a valid number.")
+
+
+def play_game():
+    print("=== Tic-Tac-Toe AI ===")
+    print("You are X. The AI is O.")
+    print("Choose a position from 1 to 9.")
+
+    print_board()
+
+    while True:
+        # Human turn
+        human_move()
+        print_board()
+
+        result = check_winner(board)
+
+        if result:
+            if result == HUMAN:
+                print("🎉 You win!")
+            elif result == "Tie":
+                print("It's a tie!")
+            return
+
+        # AI turn
+        print("AI is thinking...")
+        move = find_best_move()
+        board[move] = AI
+
+        print_board()
+
+        result = check_winner(board)
+
+        if result:
+            if result == AI:
+                print("🤖 AI wins!")
+            elif result == "Tie":
+                print("It's a tie!")
+            return
+
+
+if __name__ == "__main__":
+    play_game()
